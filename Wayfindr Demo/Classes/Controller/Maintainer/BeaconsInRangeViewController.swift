@@ -25,6 +25,30 @@
 
 import UIKit
 import CoreLocation
+// FIXME: comparison operators with optionals were removed from the Swift Standard Libary.
+// Consider refactoring the code to use the non-optional operators.
+fileprivate func < <T : Comparable>(lhs: T?, rhs: T?) -> Bool {
+  switch (lhs, rhs) {
+  case let (l?, r?):
+    return l < r
+  case (nil, _?):
+    return true
+  default:
+    return false
+  }
+}
+
+// FIXME: comparison operators with optionals were removed from the Swift Standard Libary.
+// Consider refactoring the code to use the non-optional operators.
+fileprivate func >= <T : Comparable>(lhs: T?, rhs: T?) -> Bool {
+  switch (lhs, rhs) {
+  case let (l?, r?):
+    return l >= r
+  default:
+    return !(lhs < rhs)
+  }
+}
+
 
 
 /// Displays the nearest beacon to the user and all its relevant information (RSSI, Battery Level, etc.).
@@ -34,20 +58,20 @@ final class BeaconsInRangeViewController: BaseViewController<BeaconsInRangeView>
     // MARK: - Properties
     
     /// Interface for interacting with beacons.
-    private var interface: BeaconInterface
+    fileprivate var interface: BeaconInterface
     
     /// The nearest beacon, if one exists.
-    private var nearestBeacon: WAYBeacon?
+    fileprivate var nearestBeacon: WAYBeacon?
     /// Desired beacon for which to show data. If nil, then just display data for nearest beacon.
-    private let desiredBeacon: BeaconIdentifier?
+    fileprivate let desiredBeacon: BeaconIdentifier?
     
     /// Print debug info to assist with debugging this controller.
-    private let printDebugInfo = false
+    fileprivate let printDebugInfo = false
     /// Print errors to assist with debugging this controller.
-    private let printErrorInfo = true
+    fileprivate let printErrorInfo = true
     
     /// Commonly used "To Be Determined" string to display when not all information is available.
-    private let tbdText = WAYStrings.BeaconsInRange.TBD
+    fileprivate let tbdText = WAYStrings.BeaconsInRange.TBD
     
     
     // MARK: - Intiailizers / Deinitializers
@@ -65,6 +89,10 @@ final class BeaconsInRangeViewController: BaseViewController<BeaconsInRangeView>
         super.init()
     }
     
+    required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
     
     // MARK: - View Lifecycle
     
@@ -78,11 +106,11 @@ final class BeaconsInRangeViewController: BaseViewController<BeaconsInRangeView>
             underlyingView.setLocatingLabelText(noBeaconText)
         }
         
-        navigationController?.navigationBar.translucent = false
+        navigationController?.navigationBar.isTranslucent = false
         extendedLayoutIncludesOpaqueBars = false
     }
     
-    override func viewDidAppear(animated: Bool) {
+    override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         
         if let myDesiredBeacon = desiredBeacon {
@@ -91,7 +119,7 @@ final class BeaconsInRangeViewController: BaseViewController<BeaconsInRangeView>
         interface.delegate = self
     }
     
-    override func viewDidDisappear(animated: Bool) {
+    override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
         
         interface.needsFullBeaconData = false
@@ -103,7 +131,7 @@ final class BeaconsInRangeViewController: BaseViewController<BeaconsInRangeView>
     
     // MARK: - BeaconInterfaceDelegate
     
-    func beaconInterface(beaconInterface: BeaconInterface, didChangeBeacons beacons: [WAYBeacon]) {
+    func beaconInterface(_ beaconInterface: BeaconInterface, didChangeBeacons beacons: [WAYBeacon]) {
         let beaconsWithAccuracy = beacons.filter({
             if let _ = $0.accuracy {
                 return true
@@ -114,12 +142,11 @@ final class BeaconsInRangeViewController: BaseViewController<BeaconsInRangeView>
         
         if !beaconsWithAccuracy.isEmpty {
             // We have beacons with accuracy data
-            let filteredBeacons = beaconsWithAccuracy.filter({$0.accuracy >= 0.0}).sort({$0.accuracy < $1.accuracy})
+            let filteredBeacons = beaconsWithAccuracy.filter({$0.accuracy >= 0.0}).sorted(by: {$0.accuracy < $1.accuracy})
             
             if let firstBeacon = filteredBeacons.first {
                 
-                if let myNearestBeacon = nearestBeacon
-                    where myNearestBeacon.UUIDString == firstBeacon.UUIDString {
+                if let myNearestBeacon = nearestBeacon, myNearestBeacon.UUIDString == firstBeacon.UUIDString {
                         // Update the existing nearest beacon
                         let mergedBeacon = WAYBeacon.mergeBeacons(firstBeacon, oldBeacon: myNearestBeacon)
                         
@@ -127,8 +154,7 @@ final class BeaconsInRangeViewController: BaseViewController<BeaconsInRangeView>
                         
                         self.updateData(mergedBeacon)
                 } else {
-                    if let myDesiredBeacon = self.desiredBeacon
-                        where myDesiredBeacon != firstBeacon.identifier {
+                    if let myDesiredBeacon = self.desiredBeacon, myDesiredBeacon != firstBeacon.identifier {
                             // We're looking for a specific beacon, but found a different one.
                             //      So we ignore this beacon.
                             return
@@ -145,7 +171,7 @@ final class BeaconsInRangeViewController: BaseViewController<BeaconsInRangeView>
             // We don't have any beacons with accuracy data.
             //      Compare with `nearestBeacon` for updated information
             if let myNearestBeacon = nearestBeacon,
-                desiredBeaconIndex = beacons.indexOf({$0.identifier == myNearestBeacon.identifier}) {
+                let desiredBeaconIndex = beacons.index(where: {$0.identifier == myNearestBeacon.identifier}) {
                     
                     // Update the existing nearest beacon
                     
@@ -167,7 +193,7 @@ final class BeaconsInRangeViewController: BaseViewController<BeaconsInRangeView>
     
     - parameter beacon:          Beacon information.
     */
-    private func updateData(beacon: WAYBeacon) {
+    fileprivate func updateData(_ beacon: WAYBeacon) {
         underlyingView.locatingLabelHidden = true
         
         underlyingView.headerView.bodyLabel.text = String(beacon.minor)
@@ -204,7 +230,7 @@ final class BeaconsInRangeViewController: BaseViewController<BeaconsInRangeView>
      - parameter text:  Information to update the `label` with, if it exists.
      - parameter units: Units to append to `text`, if it exists.
      */
-    private func updateLabel(label: UILabel, text: String?, units: String = "") {
+    fileprivate func updateLabel(_ label: UILabel, text: String?, units: String = "") {
         if let myText = text {
             label.text = myText + units
         } else {

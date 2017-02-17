@@ -27,19 +27,30 @@ import Foundation
 
 
 enum BeaconInterfaceState: Equatable {
-    case Initializing
-    case Failed(localizedDescription: String)
-    case Operating
+    case initializing
+    case failed(localizedDescription: String)
+    case operating
 }
 
 func == (lhs: BeaconInterfaceState, rhs: BeaconInterfaceState) -> Bool {
-    if case .Initializing = lhs, .Initializing = rhs {
+    
+    switch (lhs, rhs) {
+    case (.initializing, .initializing),
+         (.failed, .failed),
+         (.operating, .operating):
+        
         return true
-    } else if case .Failed = lhs, .Failed = rhs {
-        return true
-    } else if case .Operating = lhs, .Operating = rhs {
-        return true
+    default:
+        return false
     }
     
-    return false
+//    if case .initializing = lhs, .initializing == rhs {
+//        return true
+//    } else if case .failed = lhs, case .failed = rhs {
+//        return true
+//    } else if case .operating = lhs, .operating == rhs {
+//        return true
+//    }
+    
+//    return false
 }
