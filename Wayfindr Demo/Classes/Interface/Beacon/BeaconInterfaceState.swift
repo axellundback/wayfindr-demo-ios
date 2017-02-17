@@ -43,14 +43,4 @@ func == (lhs: BeaconInterfaceState, rhs: BeaconInterfaceState) -> Bool {
     default:
         return false
     }
-    
-//    if case .initializing = lhs, .initializing == rhs {
-//        return true
-//    } else if case .failed = lhs, case .failed = rhs {
-//        return true
-//    } else if case .operating = lhs, .operating == rhs {
-//        return true
-//    }
-    
-//    return false
 }

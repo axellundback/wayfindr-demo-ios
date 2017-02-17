@@ -28,6 +28,7 @@ import CoreLocation
 
 import SwiftGraph
 // FIXME: comparison operators with optionals were removed from the Swift Standard Libary.
+//https://github.com/wayfindrltd/wayfindr-demo-ios/issues/6
 // Consider refactoring the code to use the non-optional operators.
 fileprivate func < <T : Comparable>(lhs: T?, rhs: T?) -> Bool {
   switch (lhs, rhs) {
